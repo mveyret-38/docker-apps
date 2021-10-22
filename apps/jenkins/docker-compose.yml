@@ -1,0 +1,24 @@
+version: '3.7'
+
+services:
+  jenkins:
+    image: 'jenkins/jenkins:lts-jdk11'
+    container_name: jenkins.local
+    hostname: 'jenkins.local'
+    user: 0:0
+    ports:
+    - 883:80
+    - 8083:8080
+    - 50000:50000
+    volumes:
+    - /srv/jenkins/home:/var/jenkins_home/
+    networks:
+      docker-apps-local:
+        ipv4_address: "192.168.38.3"
+    
+networks:
+  default:
+    external:
+      name: docker-apps-local
+  docker-apps-local:
+    external: true

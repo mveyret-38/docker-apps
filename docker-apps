@@ -1,0 +1,174 @@
+#!/bin/bash
+#   __  __   ____ __  __
+#   |  \/  | / __ \\ \/ /
+#   | |\/| |/ / _` |\  / 
+#   | |  | | | (_| |/  \ 
+#   |_|  |_|\ \__,_/_/\_\
+#            \____/      
+
+cd "$(dirname "$0")"
+
+# Reset
+Color_Off='\033[0m'
+Error='\033[0;31m'
+INFO='\033[0;34m'
+
+LIB_PATH=/var/lib/docker-apps
+APPS_PATH=$LIB_PATH/apps
+
+PrintError() {
+  echo -e "$Error[ERROR] $1 $Color_Off"
+}
+
+PrintInfo() {
+  echo -e "$Info[INFO] $1 $Color_Off"
+}
+
+Usage() {
+  echo "Manage local docker apps
+  "
+  echo "Usage : 
+  docker-apps [OPTIONS] COMMAND APPS
+  "
+  echo "Options :
+  -l --lib-path : Set lib path
+  -h --help: Display usage
+  "
+  echo "Commands :
+  infos : Display apps infos  
+  install : Install docker-apps
+  list : List local docker apps
+  ps: List apps containers
+  start : Start local docker apps
+  stop : Stop local docker apps
+  uninstall : Uninstall docker-apps  
+  "
+  echo "Exemple: 
+  ./docker-apps start gitlab jenkins --lib-path .
+  "
+  echo "Exemple (docker-apps installed): 
+  docker-apps start gitlab jenkins
+  "  
+  exit 1
+}
+
+GetContainersIds() {
+  if [ -z "$APPS" ]; then 
+    containerIds=$(docker ps ${1} | grep ".local" | awk '{print $1}')
+    echo "$containerIds"
+  else
+    echo $APPS
+  fi
+}
+
+StartApps() {
+  echo $LIB_PATH
+  for app in $APPS;do
+    PrintInfo "Starting $app ..."
+    docker-compose -f $APPS_PATH/$app/docker-compose.yml up -d
+    if [ $? -eq 0 ]; then
+      PrintInfo "$app started ..."
+    fi
+  done
+}
+
+StopApps() {
+  for app in $APPS;do
+    PrintInfo "Stopping $app ..."
+    docker-compose -f $APPS_PATH/$app/docker-compose.yml down
+    if [ $? -eq 0 ]; then
+      PrintInfo "$app stopped ..."
+    fi
+  done
+}
+
+ListApps() {
+  for app in $LIB_PATH/apps/*
+  do
+    basename $app
+  done
+}
+
+Install() {
+  if [ $(dirname "$0") == "/usr/bin" ]; then
+    PrintInfo "docker-apps already installed"
+  else
+    PrintInfo "Install docker-apps ..."
+    sudo cp ./docker-apps /usr/bin/docker-apps
+    sudo chmod +x /usr/bin/docker-apps
+    sudo mkdir -p /var/lib/docker-apps
+    sudo cp -rf apps /var/lib/docker-apps/
+    PrintInfo "docker-apps installed ..."
+  fi
+}
+
+Uninstall() {
+  PrintInfo "Uninstall docker-apps ..."
+  sudo rm -rf /usr/bin/docker-apps
+  sudo rm -rf /var/lib/docker-apps/
+  PrintInfo "docker-apps uninstalled ..."
+}
+
+InfosApps() {
+  PrintInfo "Apps informations"
+  containerIds=$( GetContainersIds )
+  docker inspect -f '  💻 {{.Name}} - {{.Config.Image}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $containerIds | sed 's/\///'
+}
+
+CustomPs() {
+  PrintInfo "Apps ps"
+  docker ps -f name=.local$ | while read line; do
+    if `echo $line | grep -q 'CONTAINER ID'`; then
+      echo -e "IP ADDRESS\t$line"
+    else
+      containerId=$(echo $line | awk '{print $1}');
+      ip=$(docker inspect -f "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" $containerId);
+       printf "${ip}\t${line}\n"
+    fi
+    done;
+}
+
+SetLibPath() {
+  LIB_PATH=$1
+  APPS_PATH=$LIB_PATH/apps
+}
+
+PARSED_ARGUMENTS=$(getopt -l "help,lib-path:" -o "hl:" -a -- "$@")
+VALID_ARGUMENTS=$?
+if [ "$VALID_ARGUMENTS" != "0" ]; then
+  Usage
+fi
+
+eval set -- "$PARSED_ARGUMENTS"
+while :
+do
+  case "$1" in
+    -l | --lib-path) shift;SetLibPath $1;;
+    -h | --help) Usage ;;    
+    --) shift; break ;;
+    *) PrintError "Unexpected option: $1 - this should not happen."
+       Usage ;;
+  esac
+  shift
+done
+
+ARGS=$@
+COMMAND=$1
+APPS="${@:2}"
+
+if [ -z $COMMAND ]; then 
+  PrintError "No action argument - this should not happen."
+  Usage
+fi
+
+case $COMMAND in
+  infos) InfosApps ;;
+  install) Install ;;
+  list) ListApps ;;
+  ps) CustomPs ;;
+  start) StartApps ;;
+  stop) StopApps ;;
+  uninstall) Uninstall ;;
+  *) PrintError "Unexpected action: $COMMAND - this should not happen."
+     Usage ;;  
+esac

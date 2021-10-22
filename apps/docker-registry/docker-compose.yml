@@ -1,0 +1,21 @@
+version: '3.7'
+services:
+  registry:
+    restart: always
+    image: registry:2
+    container_name: docker-registry.local
+    hostname: 'docker-registry'
+    ports:
+      - 5000:5000
+    environment:
+      REGISTRY_HTTP_TLS_CERTIFICATE: /certs/localhost.crt
+      REGISTRY_HTTP_TLS_KEY: /certs/localhost.key
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+    volumes:
+      - /srv/docker-registry/data/:/var/lib/registry
+      - /srv/docker-registry/certs/:/certs
+      - /srv/docker-registry/auth/:/auth
+
+

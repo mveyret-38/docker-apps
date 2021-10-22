@@ -1,0 +1,30 @@
+version: '3.7'
+
+services:
+  elasticsearch:
+    image: elasticsearch:${ELASTICSEARCH_VERSION}
+    container_name: elasticsearch.local
+    hostname: elasticsearch.local
+    user: "1000:0"
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - "xpack.security.enabled=false"
+      - "bootstrap.memory_lock=true"
+      - "discovery.type=single-node"
+      - "ELASTIC_PASSWORD=changeme"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - /srv/elasticsearch/data:/usr/share/elasticsearch/data   
+      - /srv/elasticsearch/logs:/usr/share/elasticsearch/logs
+    networks:
+      docker-apps-local:
+        ipv4_address: "192.168.38.5"
+    
+networks:
+  default:
+    external:
+      name: docker-apps-local
+  docker-apps-local:
+    external: true

@@ -1,0 +1,32 @@
+version: '3.7'
+
+services:
+  gitlab:
+    image: 'gitlab/gitlab-ce:latest'
+    container_name: gitlab.local
+    hostname: 'gitlab.local'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab.local'
+      # GITLAB_ROOT_PASSWORD: '${GITLAB_ROOT_PASSWORD}'
+    ports:
+    - 882:80
+    - 8082:8080
+    - 5002:5000
+ 
+    volumes:
+    - /srv/gitlab/config:/etc/gitlab/
+    - /srv/gitlab/logs:/var/log/gitlab/
+    - /srv/gitlab/data:/var/opt/gitlab/
+    networks:
+      docker-apps-local:
+        ipv4_address: "192.168.38.2"
+    
+networks:
+  default:
+    external:
+      name: docker-apps-local
+  docker-apps-local:
+    external: true
+
+

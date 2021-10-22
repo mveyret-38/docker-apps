@@ -1,0 +1,84 @@
+version: '3.7'
+
+services:
+  elk-elasticsearch:
+    image: elasticsearch:${ELK_VERSION}
+    container_name: elk-elasticsearch.local
+    hostname: elk-elasticsearch.local
+    user: "1000:0"
+    ports:
+      - 9206:9200
+      - 9306:9300
+    environment:
+      - "bootstrap.memory_lock=true"
+      - "ELASTIC_USERNAME=elastic"  
+      - "ELASTIC_PASSWORD=changeme"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - type: bind
+        source: ./elasticsearch/config/elasticsearch.yml
+        target: /usr/share/elasticsearch/config/elasticsearch.yml
+      - /srv/elk/elasticsearch/data:/usr/share/elasticsearch/data   
+      - /srv/elk/elasticsearch/logs:/usr/share/elasticsearch/logs
+    networks:
+      docker-apps-local:
+        ipv4_address: "192.168.38.6"
+  elk-kibana:
+    image: kibana:${ELK_VERSION}
+    container_name: elk-kibana.local
+    hostname: elk-kibana.local
+    user: "1000:0"
+    volumes:
+      - type: bind
+        source: ./kibana/config/kibana.yml
+        target: /usr/share/kibana/config/kibana.yml
+        read_only: true
+      - /srv/elk/kibana/data:/usr/share/kibana/data
+    ports:
+      - "5601:5601"
+    networks:
+      docker-apps-local:
+        ipv4_address: "192.168.38.7"
+    depends_on:
+      - elk-elasticsearch
+    extra_hosts:
+      - "elasticsearch:192.168.38.6"
+
+  elk-logstash:
+    image: logstash:${ELK_VERSION}
+    container_name: elk-logstash.local
+    hostname: elk-logstash.local
+    volumes:
+      - type: bind
+        source: ./logstash/config/logstash.yml
+        target: /usr/share/logstash/config/logstash.yml
+        read_only: true
+      - type: bind
+        source: ./logstash/pipeline/logstash.conf
+        target: /usr/share/logstash/pipeline/logstash.conf
+        read_only: true
+      - /srv/elk/logstash/data:/usr/share/logstash/data
+      - /srv/elk/logstash/pipeline:/usr/share/logstash/pipeline
+    ports:
+ 
+
+      - "5044:5044"
+      - "5008:5000/tcp"
+      - "5008:5000/udp"
+      - "9600:9600"     
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      docker-apps-local:
+        ipv4_address: "192.168.38.8"
+    depends_on:
+      - elk-elasticsearch
+    extra_hosts:
+      - "elasticsearch:192.168.38.6"
+
+networks:
+  default:
+    external:
+      name: docker-apps-local
+  docker-apps-local:
+    external: true
