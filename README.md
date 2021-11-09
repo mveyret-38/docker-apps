@@ -87,6 +87,7 @@ Exemple (docker-apps installed):
 | elk-elasticsearch.local| elasticsearch:7.7.0 | 9206:9200 <br> 9306:9300 | 192.168.38.6 |
 | elk-kibana.local| kibana:7.7.0 | 5601:5601 | 192.168.38.7 |
 | elk-logstash.local | logstash:7.7.0 | 9600:9600 <br> 5008:5000 | 192.168.38.8 |
+| mongodb.local | mongo:latest | 27017:27017 | 192.168.38.9 |
 
 
 ## Apps
@@ -175,5 +176,16 @@ Exemple (docker-apps installed):
 ➜ curl http://localhost:9206\?pretty
 ➜ curl http://localhost:5601/api/status\?pretty
 ➜ curl http://localhost:9600\?pretty
+```
 
+### MongoDB
+
+#### Run
+```shell
+➜ docker-apps start mongodb
+```
+
+#### Test
+```shell
+➜ bash -c "echo > /dev/tcp/0.0.0.0/27017"
 ```
