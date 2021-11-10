@@ -28,6 +28,9 @@ chown -R 1000:root /srv/elk
 echo "Docker Registry"
 mkdir -p /srv/docker-registry/{auth,certs,data}
 
+echo "Nginx"
+mkdir -p /srv/nginx/html
+
 PrintInfo "Directories created"
 
 PrintInfo "Configuring Docker Registry"

@@ -88,6 +88,8 @@ Exemple (docker-apps installed):
 | elk-kibana.local| kibana:7.7.0 | 5601:5601 | 192.168.38.7 |
 | elk-logstash.local | logstash:7.7.0 | 9600:9600 <br> 5008:5000 | 192.168.38.8 |
 | mongodb.local | mongo:latest | 27017:27017 | 192.168.38.9 |
+| nginx.local | nginx:latest | 8090:80 | 192.168.38.10 |
+| mariadb.local | mariadb:latest | 3306:3306 | 192.168.38.11 |
 
 
 ## Apps
@@ -188,4 +190,41 @@ Exemple (docker-apps installed):
 #### Test
 ```shell
 ➜ bash -c "echo > /dev/tcp/0.0.0.0/27017"
+➜ docker exec -it mongodb.local mongo --version
+```
+
+### Nginx
+
+#### Run
+```shell
+➜ docker-apps start nginx
+```
+
+#### Test
+```shell
+➜ sudo sh -c 'echo "<html>
+<head>
+  <meta charset=\"utf-8\">
+  <title>Docker Nginx</title>
+</head>
+<body>
+  <h2>Hello from Nginx container </h2>
+</body>
+</html>
+" > /srv/nginx/html/index.html'
+➜ curl http://localhost:8090
+```
+
+### MariaDB
+
+#### Run
+```shell
+➜ docker-apps start mariadb
+```
+
+#### Test
+```shell
+➜ bash -c "echo > /dev/tcp/0.0.0.0/3306"
+➜ docker exec -it mariadb.local mysql --version
+➜ docker exec -it mariadb.local mysql -uroot -ppassword -e 'SHOW DATABASES;'
 ```
