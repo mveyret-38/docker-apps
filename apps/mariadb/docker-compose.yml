@@ -1,0 +1,27 @@
+version: '3.7'
+
+services:
+  mariadb:
+    image: 'mariadb:latest'
+    container_name: mariadb.local
+    hostname: 'mariadb.local'
+    user: 0:0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: default
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: password
+    ports:
+      - 3306:3306
+    volumes:
+    - /srv/mariadb:/var/lib/mysql/
+    networks:
+      docker-apps-local:
+        ipv4_address: "192.168.38.11"
+    
+networks:
+  default:
+    external:
+      name: docker-apps-local
+  docker-apps-local:
+    external: true

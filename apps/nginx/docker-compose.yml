@@ -1,0 +1,22 @@
+version: '3.7'
+
+services:
+  nginx:
+    image: 'nginx:latest'
+    container_name: nginx.local
+    hostname: 'nginx.local'
+    user: 0:0
+    ports:
+      - 8090:80
+    volumes:
+    - /srv/nginx/html:/usr/share/nginx/html
+    networks:
+      docker-apps-local:
+        ipv4_address: "192.168.38.10"
+    
+networks:
+  default:
+    external:
+      name: docker-apps-local
+  docker-apps-local:
+    external: true
